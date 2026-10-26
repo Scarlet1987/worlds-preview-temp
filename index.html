@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="refresh" content="30">
+<title>Worlds — Alice preview</title>
+<style>
+  :root{
+    --page:#16211e; --card:#22332d; --field:#2a3d37; --border:#35473f;
+    --teal:#2dd4bf; --ground:#04231f; --text:#f2faf8;
+    --muted:rgba(242,250,248,.78); --faint:rgba(242,250,248,.55);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    background:var(--page);color:var(--text);line-height:1.55;font-size:16px}
+  /* Forest background, locked at 80% opacity, like Home and Creator. */
+  .forest{position:fixed;inset:0;z-index:-2;overflow:hidden}
+  .forest img{width:100%;height:100%;object-fit:cover;opacity:.80;
+    filter:brightness(1.25) contrast(1.15)}
+  .forest::after{content:"";position:absolute;inset:0;
+    background:linear-gradient(180deg,rgba(6,22,19,.30),rgba(6,22,19,.55))}
+  .drift{position:fixed;inset:-20%;z-index:-1;pointer-events:none;opacity:.18;
+    background:radial-gradient(closest-side at 30% 30%,rgba(45,212,191,.35),transparent 70%),
+      radial-gradient(closest-side at 75% 65%,rgba(45,212,191,.22),transparent 70%);
+    animation:drift 40s ease-in-out infinite alternate}
+  @keyframes drift{from{transform:translate(0,0)}to{transform:translate(-2%,2%)}}
+  @media (prefers-reduced-motion:reduce){.drift{animation:none}}
+  .wrap{max-width:1080px;margin:0 auto;padding:24px 18px 64px}
+  .preview-note{background:rgba(34,51,45,.88);backdrop-filter:blur(10px);
+    border:1px solid var(--border);border-radius:20px;padding:14px 18px;
+    font-size:14px;color:var(--muted);margin-bottom:18px}
+  .preview-note strong{color:var(--teal)}
+  header.hero{background:rgba(34,51,45,.88);backdrop-filter:blur(10px);
+    border:1px solid var(--border);border-radius:28px;padding:24px;display:flex;
+    gap:20px;align-items:center;margin-bottom:18px}
+  header.hero img.mark{width:96px;height:96px;flex:none;border-radius:20px;
+    border:1px solid var(--border);background:var(--ground);object-fit:cover}
+  header.hero h1{margin:0;font-size:34px;line-height:1.1;letter-spacing:.5px}
+  header.hero p{margin:8px 0 0;color:var(--muted);max-width:56ch}
+  .card{background:rgba(34,51,45,.88);backdrop-filter:blur(10px);
+    border:1px solid var(--border);border-radius:28px;padding:22px}
+  .card h2{margin:0 0 8px;font-size:22px}
+  .card h3{margin:0;font-size:18px}
+  .card p{margin:8px 0;color:var(--muted)}
+  .card p strong, li strong{color:var(--text)}
+  /* Stage container: Stage holds all of the selected tiers below it. */
+  .stage{margin-bottom:18px}
+  .stage-head{display:flex;flex-direction:column;gap:14px;align-items:center;text-align:center}
+  .stage-head h2{font-size:28px}
+  .stage-toolbar{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;align-items:center;width:100%}
+  .stage-toolbar .btn{flex:1 1 160px;max-width:220px}
+  .stage-head h2{flex:0 0 auto;margin:0}
+  .stage-field{flex:1;min-width:220px;background:rgba(42,61,55,.88);backdrop-filter:blur(8px);
+    border:1px solid var(--border);border-radius:14px;padding:12px 14px;color:var(--muted)}
+  .stage-field b{color:var(--text)}
+  /* Jump to: plain anchor links, no JavaScript needed. */
+  .jump{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 4px}
+  .jump a{display:inline-flex;align-items:center;min-height:48px;padding:0 16px;
+    border:1px solid var(--border);border-radius:16px;background:var(--field);
+    color:var(--text);text-decoration:none;font-weight:600}
+  .jump a:hover,.jump a:focus{border-color:var(--teal);color:var(--teal);outline:none}
+  .jump-label{width:100%;font-size:14px;color:var(--muted);margin:0}
+  /* Body: left rules column, right content board. Stacks on narrow screens. */
+  .body{display:grid;grid-template-columns:300px 1fr;gap:18px;margin-top:18px;align-items:start}
+  .rules ol,.rules ul{margin:8px 0;padding-left:20px;color:var(--muted)}
+  .rules li{margin:10px 0}
+  .rules li strong{color:var(--text)}
+  .lore-strip{border-top:1px solid var(--border);margin-top:16px;padding-top:14px;color:var(--muted)}
+  .lore-strip strong{color:var(--text)}
+  .empty{text-align:center;padding:8px 0 4px}
+  .empty h2{margin:0 0 8px}
+  /* Tier sections: <details>/<summary> so they work with no JavaScript.
+     The label is always visible — nothing is hidden behind a gate. */
+  details.tier{background:rgba(42,61,55,.88);backdrop-filter:blur(8px);
+    border:1px solid var(--border);border-radius:20px;margin-bottom:14px;overflow:hidden}
+  details.tier summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:14px;
+    padding:18px 20px;min-height:48px}
+  details.tier summary::-webkit-details-marker{display:none}
+  details.tier summary:hover{background:rgba(45,212,191,.06)}
+  .tier-title{flex:1;min-width:0}
+  .tier-title h3{margin:0;font-size:19px}
+  .tier-title p{margin:2px 0 0;color:var(--muted);font-size:15px}
+  .chev{flex:none;width:24px;height:24px;color:var(--teal);transition:transform .35s ease}
+  details.tier[open ] .chev{transform:rotate(90deg)}
+  .tier-body{padding:0 20px 20px}
+  .tier-body p{color:var(--muted);margin:8px 0}
+  .field-row{display:flex;gap:10px;align-items:center;margin:12px 0;flex-wrap:wrap}
+  .field{flex:1;min-width:200px;background:rgba(22,33,30,.88);backdrop-filter:blur(8px);
+    border:1px solid var(--border);border-radius:14px;padding:12px 14px;color:var(--muted)}
+  .field b{color:var(--text)}
+  button,.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    min-height:48px;min-width:48px;padding:0 16px;border-radius:16px;cursor:pointer;
+    border:1px solid var(--border);background:var(--field);color:var(--text);
+    font:inherit;font-weight:600;text-decoration:none}
+  button:hover,.btn:hover{border-color:var(--teal);color:var(--teal)}
+  button.primary,.btn.primary{background:var(--teal);border-color:var(--teal);color:#04231f}
+  button.danger,.btn.danger{color:#f8a5a5;border-color:rgba(248,165,165,.5)}
+  button.danger:hover,.btn.danger:hover{border-color:#f8a5a5;color:#f8a5a5}
+  .icon{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:2;
+    stroke-linecap:round;stroke-linejoin:round}
+  footer{color:var(--faint);font-size:14px;text-align:center;margin-top:8px}
+  @media (max-width:800px){
+    .body{grid-template-columns:1fr}
+    header.hero{flex-direction:column;align-items:flex-start}
+  }
+</style>
+</head>
+<body>
+<div class="forest" aria-hidden="true">
+  <img src="backgrounds/media-generation-creator-bg-forest-portal-0-a1fdcc3e-e0f9-44db-9085-fc4bb0430eda.webp" alt="">
+</div>
+<div class="drift" aria-hidden="true"></div>
+<main class="wrap">
+  <p class="preview-note"><strong>PREVIEW ONLY — no changes have been made to the app.</strong>
+  This page is built from Elaina's Worlds sketch.</p>
+
+  <!-- 1. Header -->
+  <header class="hero">
+    <img class="mark" src="rabbit-hole-icon-t.png" alt="Teal rabbit mark">
+    <div>
+      <h1>Worlds</h1>
+      <p>Where your stories are set.</p>
+    </div>
+  </header>
+
+  <!-- 2 + 3 + 4. Stage container: stage row, Jump to, then the two-column body inside it -->
+  <section class="card stage" aria-label="Stage">
+    <div class="stage-head" id="stage">
+      <h2>Stage</h2>
+      <div class="stage-toolbar">
+        <a class="btn primary" href="#stage">+ new world</a>
+        <a class="btn" href="#stage">edit world</a>
+        <a class="btn danger" href="#stage">delete</a>
+      </div>
+    </div>
+
+    <!-- 3. Jump to -->
+    <nav class="jump" aria-label="Jump to">
+      <p class="jump-label">Jump to</p>
+      <a href="#universe">Universe</a>
+      <a href="#galaxy">Galaxy</a>
+      <a href="#planet">Planet</a>
+      <a href="#continent">Continent</a>
+      <a href="#city">City</a>
+      <a href="#village">Village</a>
+      <a href="#town">Town</a>
+    </nav>
+
+    <!-- 4. Body: left rules, right content board -->
+    <div class="body">
+      <!-- Left column: How worlds work -->
+      <aside class="card rules" aria-label="How worlds work">
+        <h2>How worlds work</h2>
+        <ol>
+          <li><strong>World position.</strong> After an add, focus lands on the changed section. After a delete, focus lands on what is adjacent to it — because where you start the story is where you are.</li>
+          <li><strong>Name it yourself.</strong> Pressing + at any level prompts you to name that level. The AI never fills it in for you, and each scale you add is the boundary of what can be played in.</li>
+          <li><strong>Every field is + − your text.</strong> Every field carries + to add an instance and − to remove one, with your own text in it. At least one entry is kept.</li>
+        </ol>
+        <p><strong>Nothing hidden.</strong> No show-all gates. Labels are always visible; depth comes from scrolling and from these collapsible sections.</p>
+        <div class="lore-strip"><strong>Lore Book lives in creator.</strong> The full lore book is in Creator's World section. Worlds is the place ladder itself.</div>
+      </aside>
+
+      <!-- Right column: content board, inside the Stage container -->
+      <div>
+        <section class="card empty" aria-label="No worlds yet">
+          <h2>No worlds yet</h2>
+          <p>Every story needs a stage. Build your first world — pick a scale, set the physics, start creating.</p>
+          <p>Example path: Stage &gt; Universe &gt; Galaxy &gt; Planet &gt; Continent &gt; City &gt; Village &gt; Town — nothing here ships.</p>
+          <p><a class="btn primary" href="#stage">Build your first world</a></p>
+        </section>
+
+
+        <details class="tier" id="universe">
+          <summary>
+            <span class="tier-title"><h3>Universe</h3><p>One universe</p></span>
+            <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </summary>
+          <div class="tier-body">
+            <div class="field-row">
+              <div class="field"><b>Universe name</b> — your text</div>
+              <button aria-label="Add"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+              <button aria-label="Remove"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+              <button>edit</button>
+              <button class="danger">delete</button>
+            </div>
+          </div>
+        </details>
+
+        <details class="tier" id="galaxy">
+          <summary>
+            <span class="tier-title"><h3>Galaxy</h3><p>One galaxy</p></span>
+            <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </summary>
+          <div class="tier-body">
+            <div class="field-row">
+              <div class="field"><b>Galaxy name</b> — your text</div>
+              <button aria-label="Add"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+              <button aria-label="Remove"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+              <button>edit</button>
+              <button class="danger">delete</button>
+            </div>
+          </div>
+        </details>
+
+        <details class="tier" id="planet">
+          <summary>
+            <span class="tier-title"><h3>Planet</h3><p>One planet</p></span>
+            <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </summary>
+          <div class="tier-body">
+            <div class="field-row">
+              <div class="field"><b>Planet name</b> — your text</div>
+              <button aria-label="Add"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+              <button aria-label="Remove"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+              <button>edit</button>
+              <button class="danger">delete</button>
+            </div>
+          </div>
+        </details>
+
+        <details class="tier" id="continent">
+          <summary>
+            <span class="tier-title"><h3>Continent</h3><p>One continent</p></span>
+            <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </summary>
+          <div class="tier-body">
+            <div class="field-row">
+              <div class="field"><b>Continent name</b> — your text</div>
+              <button aria-label="Add"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+              <button aria-label="Remove"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+              <button>edit</button>
+              <button class="danger">delete</button>
+            </div>
+          </div>
+        </details>
+
+        <details class="tier" id="city">
+          <summary>
+            <span class="tier-title"><h3>City</h3><p>Where scenes happen in a city</p></span>
+            <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </summary>
+          <div class="tier-body">
+            <div class="field-row">
+              <div class="field"><b>City name</b> — your text</div>
+              <button aria-label="Add"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+              <button aria-label="Remove"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+              <button>edit</button>
+              <button class="danger">delete</button>
+            </div>
+          </div>
+        </details>
+
+        <details class="tier" id="village">
+          <summary>
+            <span class="tier-title"><h3>Village</h3><p>Where scenes happen in a village</p></span>
+            <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </summary>
+          <div class="tier-body">
+            <div class="field-row">
+              <div class="field"><b>Village name</b> — your text</div>
+              <button aria-label="Add"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+              <button aria-label="Remove"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+              <button>edit</button>
+              <button class="danger">delete</button>
+            </div>
+          </div>
+        </details>
+
+        <details class="tier" id="town">
+          <summary>
+            <span class="tier-title"><h3>Town</h3><p>Where scenes happen in a town</p></span>
+            <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </summary>
+          <div class="tier-body">
+            <div class="field-row">
+              <div class="field"><b>Town name</b> — your text</div>
+              <button aria-label="Add"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+              <button aria-label="Remove"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+              <button>edit</button>
+              <button class="danger">delete</button>
+            </div>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <footer>Worlds preview — from Elaina's sketch, 2026-10-25. No Dart changes made.</footer>
+</main>
+</body>
+</html>
